@@ -1,0 +1,43 @@
+version: '2'
+services:
+  data:
+    extends:
+      file: docker-compose-common.yml
+      service: data
+
+  db:
+    extends:
+      file: docker-compose-common.yml
+      service: db
+    ports:
+      - "3306:3306"
+    environment:
+      # Velues of the keys will be populated from the environment of the 
+      # machine running docker-compose
+      - MYSQL_ROOT_PASSWORD
+      - MYSQL_DATABASE
+      - MYSQL_USER
+      - MYSQL_PASSWORD
+    volumes_from:
+      - data
+
+  app:
+    extends:
+      file: docker-compose-common.yml
+      service: app
+    ports:
+      - "8000:8000"
+    links:
+      - db:db
+    volumes:
+      - ./app/app:/usr/src/app
+    command: /usr/local/bin/gunicorn --reload app.wsgi:application -w 2 -b 0.0.0.0:8000
+
+  web:
+    extends:
+      file: docker-compose-common.yml
+      service: web
+    ports:
+      - "8001:80"
+    links:
+      - app:app

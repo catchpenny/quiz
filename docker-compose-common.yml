@@ -1,0 +1,24 @@
+version: '2'
+services:
+  data:
+    image: mariadb:10.1
+    volumes:
+      - /var/lib/mysql
+    command: /bin/true
+      # Run a trivial command to exit quickly. Volumes don't need a running container.
+
+  db:
+    build: db
+    restart: always
+
+  app:
+    build:
+      context: app
+      args:
+        - PUID=1000
+        - PGID=1000
+    restart: always
+
+  web:
+    build: web
+    restart: always

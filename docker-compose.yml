@@ -1,0 +1,41 @@
+version: '2'
+services:
+  data:
+    extends:
+      file: docker-compose-common.yml
+      service: data
+
+  db:
+    extends:
+      file: docker-compose-common.yml
+      service: db
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=quiz-dev
+      - MYSQL_USER=cpuser
+      - MYSQL_PASSWORD=secret
+    volumes_from:
+      - data
+
+  app:
+    extends:
+      file: docker-compose-common.yml
+      service: app
+    ports:
+      - "8000:8000"
+    links:
+      - db:db
+    volumes:
+      - ./app/app:/usr/src/app
+    command: /usr/local/bin/gunicorn --reload app.wsgi:application -w 2 -b 0.0.0.0:8000
+
+  web:
+    extends:
+      file: docker-compose-common.yml
+      service: web
+    ports:
+      - "80:80"
+    links:
+      - app:app
