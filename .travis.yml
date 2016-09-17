@@ -1,0 +1,42 @@
+---
+# Use Ubuntu 'trusty' distribution
+sudo: required
+dist: trusty
+
+language: python
+
+python:
+  - "2.7"
+  - "3.5"
+
+env:
+  DOCKER_COMPOSE_VERSION: 1.8.0
+
+install:
+  - curl -sSL "https://get.docker.com/gpg" | sudo -E apt-key add -
+  - echo "deb https://apt.dockerproject.org/repo ubuntu-trusty main" | sudo tee -a /etc/apt/sources.list
+  - sudo apt-get update
+  - sudo apt-get install docker-engine -y
+  - sudo rm /usr/local/bin/docker-compose
+  - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
+  - chmod +x docker-compose
+  - sudo mv docker-compose /usr/local/bin
+
+before_script:
+  - docker-compose -f docker-compose-test.yml -p ci up -d
+
+# TODO Run more actual tests
+script:
+  - docker logs -f ci_sut_1 | grep -w "Tests passed. :)"
+
+after_script:
+  - docker-compose -f docker-compose-test.yml -p ci down
+
+after_failure:
+  - docker logs -f ci_sut_1
+
+notifications:
+  irc:
+    channels:
+      - "chat.freenode.net##ourenigma"
+...
